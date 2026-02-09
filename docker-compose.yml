@@ -13,6 +13,13 @@ services:
     volumes:
       - shared_data:/data
 
+  backend3:
+    build: ./backend
+    environment:
+      DATABASE_URL: sqlite:////data/microservice.db
+    volumes:
+      - shared_data:/data
+
   nginx:
     build: ./nginx
     ports:
@@ -20,6 +27,7 @@ services:
     depends_on:
       - backend1
       - backend2
+      - backend3
 
 volumes:
   shared_data:

@@ -4,7 +4,7 @@
 
 - **backend**: سرویس RESTful API با عملیات CRUD (Flask + SQLite)
 - **nginx**: Load Balancer با الگوریتم least_conn
-- **پایگاه‌داده مشترک**: SQLite در volume مشترک بین backend1 و backend2
+- **پایگاه‌داده مشترک**: SQLite در volume مشترک بین backend1، backend2 و backend3
 
 ## نحوه اجرا
 
@@ -20,29 +20,43 @@ API روی پورت 8080 در دسترس است: http://localhost:8080
 
 ### ۱. Build و اجرا با Docker Compose
 
-![اسکرین‌شات docker compose up](image.png)
+![اسکرین‌شات docker compose ps](docker%20compose%20ps.png)
 
-### ۲. خروجی docker container ls
+### ۲. خروجی docker image ls
 
+![اسکرین‌شات docker image ls](docker_image_ls.png)
+
+### ۳. نمایش اجرای موفق API در مرورگر یا Postman
+
+** endpoint های API:**
+
+| متد | آدرس | توضیح |
+|-----|------|-------|
+| GET | http://localhost:8080/health | بررسی سلامت سرویس |
+| GET | http://localhost:8080/api/items | لیست همه آیتم‌ها |
+| GET | http://localhost:8080/api/items/1 | دریافت آیتم با شناسه |
+| POST | http://localhost:8080/api/items | ایجاد آیتم (body: `{"name":"نام","description":"توضیح"}`) |
+| PUT | http://localhost:8080/api/items/1 | بروزرسانی آیتم |
+| DELETE | http://localhost:8080/api/items/1 | حذف آیتم |
+
+**تست سریع در ترمینال:**
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/api/items
 ```
-CONTAINER ID   IMAGE                COMMAND                  CREATED          STATUS          PORTS                                     NAMES
-xxxxx          se-lab-06-backend2   "python app.py"          X seconds ago    Up X seconds    5000/tcp                                  se-lab-06-backend2-1
-xxxxx          se-lab-06-nginx      "/docker-entrypoint.…"   X minutes ago    Up X minutes    0.0.0.0:8080->80/tcp                     se-lab-06-nginx-1
-xxxxx          se-lab-06-backend1   "python app.py"          X minutes ago    Up X minutes    5000/tcp                                  se-lab-06-backend1-1
+
+### ۴. Scale کردن backend (کنترل فشار روی سرویس‌ها)
+
+با افزایش فشار روی backend، یک نمونه دیگر (backend3) اضافه شد تا بار بین سرویس‌ها توزیع شود:
+
+- **تغییر در docker-compose.yml**: اضافه شدن سرویس backend3
+- **تغییر در nginx.conf**: اضافه شدن backend3 به upstream
+
+پایگاه‌داده همچنان مشترک است و قادر به تحمل بار است؛ فقط سرویس‌های backend scale شده‌اند.
+
+```bash
+docker compose up -d --build
+docker compose ps
 ```
 
-*اسکرین‌شات خروجی این دستور را اینجا قرار دهید یا تصویر `image.png` را به‌روز کنید.*
-
-### ۳. خروجی docker image ls
-
-```
-REPOSITORY           TAG       SIZE
-se-lab-06-backend2   latest    165MB
-se-lab-06-backend1   latest    165MB
-se-lab-06-nginx      latest    62.1MB
-```
-
-*اسکرین‌شات خروجی این دستور را اینجا قرار دهید.*
-
----
-*مراحل بعدی (نمایش API در مرورگر، scale کردن backend، پرسش stateless) در ادامه تکمیل می‌شود.*
+برای اطمینان، خروجی `docker compose ps` با ۳ backend در حال اجرا قابل مشاهده است.
