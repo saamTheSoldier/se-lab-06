@@ -7,10 +7,10 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-# تنظیمات پایگاه داده مشترک
+# تنظیمات پایگاه داده مشترک (SQLite برای پایداری بدون نیاز به pull تصویر)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
     'DATABASE_URL',
-    'postgresql://user:password@db:5432/microservice_db'
+    'sqlite:////data/microservice.db'
 )
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -92,7 +92,11 @@ def delete_item(item_id):
 
 
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        if "already exists" not in str(e):
+            raise
 
 
 if __name__ == '__main__':
