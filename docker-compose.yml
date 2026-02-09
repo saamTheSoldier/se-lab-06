@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: microservice_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d microservice_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend1:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/microservice_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend2:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/microservice_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend1
+      - backend2
+
+volumes:
+  postgres_data:
